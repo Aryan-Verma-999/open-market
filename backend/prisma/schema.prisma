@@ -1,0 +1,321 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  phone         String   @unique
+  passwordHash  String
+  firstName     String
+  lastName      String
+  company       String?
+  role          UserRole @default(BOTH)
+  kycStatus     KYCStatus @default(PENDING)
+  phoneVerified Boolean  @default(false)
+  emailVerified Boolean  @default(false)
+  city          String
+  state         String
+  pincode       String
+  trustScore    Float    @default(0.0)
+  isActive      Boolean  @default(true)
+  lastLoginAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  listings      Listing[]
+  sentMessages  Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+  savedListings SavedListing[]
+  reviews       Review[] @relation("ReviewsGiven")
+  receivedReviews Review[] @relation("ReviewsReceived")
+  reports       Report[]
+  orders        Order[] @relation("BuyerOrders")
+  sales         Order[] @relation("SellerOrders")
+  notifications Notification[]
+  adminActions  ModerationLog[] @relation("AdminActions")
+  moderationLogs ModerationLog[] @relation("UserModerationLogs")
+
+  @@map("users")
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  parentId    String?
+  iconUrl     String?
+  isActive    Boolean   @default(true)
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  parent      Category? @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  listings    Listing[]
+
+  @@map("categories")
+}
+
+model Listing {
+  id          String        @id @default(cuid())
+  sellerId    String
+  title       String
+  categoryId  String
+  brand       String?
+  model       String?
+  year        Int?
+  condition   Condition
+  price       Decimal
+  negotiable  Boolean       @default(true)
+  description String
+  specifications Json?
+  images      String[]
+  documents   String[]
+  city        String
+  state       String
+  latitude    Float?
+  longitude   Float?
+  pickupOnly  Boolean       @default(false)
+  canArrangeShipping Boolean @default(true)
+  status      ListingStatus @default(DRAFT)
+  views       Int           @default(0)
+  saves       Int           @default(0)
+  isActive    Boolean       @default(true)
+  expiresAt   DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relations
+  seller      User          @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  category    Category      @relation(fields: [categoryId], references: [id])
+  messages    Message[]
+  savedBy     SavedListing[]
+  reports     Report[]
+  orders      Order[]
+  moderationLogs ModerationLog[]
+
+  @@map("listings")
+}
+
+model Message {
+  id             String      @id @default(cuid())
+  conversationId String
+  senderId       String
+  receiverId     String
+  listingId      String
+  content        String
+  attachments    String[]
+  messageType    MessageType @default(TEXT)
+  quoteAmount    Decimal?
+  quoteTerms     String?
+  quoteStatus    QuoteStatus?
+  readAt         DateTime?
+  createdAt      DateTime    @default(now())
+
+  // Relations
+  sender    User    @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver  User    @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+model SavedListing {
+  id        String   @id @default(cuid())
+  userId    String
+  listingId String
+  createdAt DateTime @default(now())
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, listingId])
+  @@map("saved_listings")
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  raterId    String
+  rateeId    String
+  orderId    String?
+  rating     Int      // 1-5 stars
+  comment    String?
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  // Relations
+  rater User  @relation("ReviewsGiven", fields: [raterId], references: [id], onDelete: Cascade)
+  ratee User  @relation("ReviewsReceived", fields: [rateeId], references: [id], onDelete: Cascade)
+  order Order? @relation(fields: [orderId], references: [id])
+
+  @@map("reviews")
+}
+
+model Report {
+  id        String     @id @default(cuid())
+  reporterId String
+  listingId String?
+  userId    String?
+  reason    ReportReason
+  description String?
+  status    ReportStatus @default(PENDING)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  // Relations
+  reporter User     @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  listing  Listing? @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  moderationLogs ModerationLog[]
+
+  @@map("reports")
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  buyerId       String
+  sellerId      String
+  listingId     String
+  agreedPrice   Decimal
+  escrowStatus  EscrowStatus @default(INITIATED)
+  paymentMethod String?
+  shippingAddress Json?
+  notes         String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  // Relations
+  buyer   User    @relation("BuyerOrders", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller  User    @relation("SellerOrders", fields: [sellerId], references: [id], onDelete: Cascade)
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  reviews Review[]
+
+  @@map("orders")
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  data      Json?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model ModerationLog {
+  id         String   @id @default(cuid())
+  adminId    String
+  listingId  String?
+  reportId   String?
+  userId     String?
+  action     String   // APPROVE, REJECT, RESOLVE, DISMISS, VERIFIED, etc.
+  reason     String?
+  adminNotes String?
+  createdAt  DateTime @default(now())
+
+  // Relations
+  admin   User     @relation("AdminActions", fields: [adminId], references: [id], onDelete: Cascade)
+  listing Listing? @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  report  Report?  @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  user    User?    @relation("UserModerationLogs", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("moderation_logs")
+}
+
+// Enums
+enum UserRole {
+  BUYER
+  SELLER
+  BOTH
+  ADMIN
+}
+
+enum KYCStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum Condition {
+  NEW
+  LIKE_NEW
+  GOOD
+  FAIR
+  POOR
+}
+
+enum ListingStatus {
+  DRAFT
+  PENDING
+  LIVE
+  SOLD
+  EXPIRED
+  REJECTED
+}
+
+enum MessageType {
+  TEXT
+  QUOTE
+  SYSTEM
+}
+
+enum QuoteStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  COUNTERED
+}
+
+enum ReportReason {
+  SPAM
+  INAPPROPRIATE_CONTENT
+  FAKE_LISTING
+  FRAUD
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  RESOLVED
+  DISMISSED
+}
+
+enum EscrowStatus {
+  INITIATED
+  PAYMENT_PENDING
+  PAYMENT_RECEIVED
+  GOODS_SHIPPED
+  GOODS_DELIVERED
+  COMPLETED
+  DISPUTED
+  CANCELLED
+}
+
+enum NotificationType {
+  MESSAGE
+  QUOTE
+  LISTING_APPROVED
+  LISTING_REJECTED
+  ORDER_UPDATE
+  SYSTEM
+}

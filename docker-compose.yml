@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  # PostgreSQL database for development
+  postgres:
+    image: postgres:15-alpine
+    container_name: equipment-marketplace-postgres
+    environment:
+      POSTGRES_DB: equipment_marketplace
+      POSTGRES_USER: equipment_user
+      POSTGRES_PASSWORD: equipment_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/prisma/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U equipment_user -d equipment_marketplace"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis cache for development
+  redis:
+    image: redis:7-alpine
+    container_name: equipment-marketplace-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # Backend API (development)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: equipment-marketplace-backend
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://equipment_user:equipment_password@postgres:5432/equipment_marketplace
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=development_jwt_secret_key_for_local_only
+      - JWT_REFRESH_SECRET=development_refresh_secret_key_for_local_only
+      - FRONTEND_URL=http://localhost:3000
+      - PORT=3002
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - ./backend/uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: npm run dev
+    restart: unless-stopped
+
+  # Frontend React app (development)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: equipment-marketplace-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:3002/api
+      - REACT_APP_WS_URL=ws://localhost:3002
+      - CHOKIDAR_USEPOLLING=true
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    command: npm run dev
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
