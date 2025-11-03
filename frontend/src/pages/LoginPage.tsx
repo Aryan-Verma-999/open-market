@@ -6,7 +6,6 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useAuth } from '@/contexts/AuthContext'
-import { ApiDebug } from '@/components/ApiDebug'
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -81,8 +80,16 @@ export function LoginPage() {
             </Link>
           </p>
         </div>
-        
-        <ApiDebug />
+
+        {/* Demo Accounts Info */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h3 className="text-sm font-medium text-blue-900 mb-2">Demo Accounts</h3>
+          <div className="text-xs text-blue-800 space-y-1">
+            <div><strong>Buyer:</strong> buyer1@example.com / buyer123</div>
+            <div><strong>Seller:</strong> seller1@example.com / seller123</div>
+            <div><strong>Admin:</strong> admin@example.com / admin123</div>
+          </div>
+        </div>
         
         <div className="card p-8">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">

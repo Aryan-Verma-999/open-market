@@ -34,7 +34,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     ];
 
     console.log('Looking for user with email:', email);
-    const user = demoUsers.find(u => u.email === email && u.password === password);
+    console.log('Password provided:', password);
+    console.log('Available users:', demoUsers.map(u => ({ email: u.email, password: u.password })));
+    
+    const user = demoUsers.find(u => {
+      console.log(`Comparing: ${u.email} === ${email} && ${u.password} === ${password}`);
+      return u.email === email && u.password === password;
+    });
 
     if (!user) {
       console.log('User not found or invalid password');
