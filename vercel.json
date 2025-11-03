@@ -9,14 +9,14 @@
       }
     },
     {
-      "src": "backend/src/index.ts",
+      "src": "api/index.ts",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/backend/src/index.ts"
+      "dest": "/api/index.ts"
     },
     {
       "handle": "filesystem"
@@ -27,9 +27,6 @@
     }
   ],
   "env": {
-    "NODE_ENV": "production",
-    "DATABASE_URL": "@database_url",
-    "JWT_SECRET": "@jwt_secret",
-    "REDIS_URL": "@redis_url"
+    "NODE_ENV": "production"
   }
 }
