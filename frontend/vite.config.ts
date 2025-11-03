@@ -5,16 +5,7 @@ import path from 'path'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    react({
-      // Enable React Fast Refresh
-      fastRefresh: true,
-      // Optimize React in production
-      babel: {
-        plugins: process.env.NODE_ENV === 'production' ? [
-          ['babel-plugin-react-remove-properties', { properties: ['data-testid'] }]
-        ] : []
-      }
-    })
+    react()
   ],
   resolve: {
     alias: {
@@ -33,13 +24,7 @@ export default defineConfig({
   build: {
     // Optimize build output
     target: 'es2015',
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-      },
-    },
+    minify: 'esbuild', // Use esbuild instead of terser for faster builds
     // Code splitting configuration
     rollupOptions: {
       output: {

@@ -1,4 +1,4 @@
-import { lazy } from 'react';
+import React, { lazy } from 'react';
 
 /**
  * Lazy load components with better error handling
@@ -232,11 +232,7 @@ export function useMemoryMonitor() {
  */
 export function analyzeBundleSize() {
   if (process.env.NODE_ENV === 'development') {
-    import('webpack-bundle-analyzer').then(({ BundleAnalyzerPlugin }) => {
-      console.log('Bundle analyzer available at http://localhost:8888');
-    }).catch(() => {
-      console.log('Bundle analyzer not available');
-    });
+    console.log('Bundle analyzer not available in this build');
   }
 }
 
@@ -245,15 +241,6 @@ export function analyzeBundleSize() {
  */
 export function reportWebVitals(onPerfEntry?: (metric: any) => void) {
   if (onPerfEntry && onPerfEntry instanceof Function) {
-    import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
-      getCLS(onPerfEntry);
-      getFID(onPerfEntry);
-      getFCP(onPerfEntry);
-      getLCP(onPerfEntry);
-      getTTFB(onPerfEntry);
-    });
+    console.log('Web Vitals monitoring not available in this build');
   }
 }
-
-// Re-export React for convenience
-import React from 'react';

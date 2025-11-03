@@ -799,7 +799,7 @@ export function MessagesPage() {
       setMessages(prev => 
         prev.map(msg => 
           msg.id === messageId 
-            ? { ...msg, quoteStatus: status }
+            ? { ...msg, quoteStatus: status === 'DECLINED' ? 'REJECTED' : status }
             : msg
         )
       )
@@ -910,7 +910,7 @@ export function MessagesPage() {
                 <div className="mt-2 text-green-600 text-sm font-medium">✅ Accepted</div>
               )}
               
-              {message.quoteStatus === 'DECLINED' && (
+              {message.quoteStatus === 'REJECTED' && (
                 <div className="mt-2 text-red-600 text-sm font-medium">❌ Declined</div>
               )}
               
