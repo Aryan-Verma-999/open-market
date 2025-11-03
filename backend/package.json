@@ -40,7 +40,8 @@
     "socket.io": "^4.7.4",
     "ts-node": "^10.9.1",
     "typescript": "^5.2.2",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "@vercel/node": "^3.0.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

@@ -1,11 +1,35 @@
 {
-  "buildCommand": "npm run build:demo",
-  "outputDirectory": "frontend/dist",
-  "installCommand": "cd frontend && npm install",
-  "rewrites": [
+  "version": 2,
+  "builds": [
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "src": "frontend/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    },
+    {
+      "src": "backend/api/index.ts",
+      "use": "@vercel/node"
     }
-  ]
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/backend/api/index.ts"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/frontend/dist/index.html"
+    }
+  ],
+  "env": {
+    "DATABASE_URL": "postgres://ea746afce5b34b975c1e872b1fbbff223a10692ff81a72944ce6eb7356f27654:sk_e-LrvJgz4_C4PrqJpKIu2@db.prisma.io:5432/postgres?sslmode=require",
+    "PRISMA_DATABASE_URL": "prisma+postgres://accelerate.prisma-data.net/?api_key=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqd3RfaWQiOjEsInNlY3VyZV9rZXkiOiJza19lLUxydkpnejRfQzRQcnFKcEtJdTIiLCJhcGlfa2V5IjoiMDFLOTVRWFhLWkFDN1c3WjkxRFpFNzlCWjEiLCJ0ZW5hbnRfaWQiOiJlYTc0NmFmY2U1YjM0Yjk3NWMxZTg3MmIxZmJiZmYyMjNhMTA2OTJmZjgxYTcyOTQ0Y2U2ZWI3MzU2ZjI3NjU0IiwiaW50ZXJuYWxfc2VjcmV0IjoiMGNmYTlmNjgtNzI5Mi00OTQ1LWEyY2ItZDY0YzRmNWEzM2MyIn0.bc8egK3Ss9lk9PyBNBAOyDAjyYMlcuwIBDb1xOr7Ly0",
+    "NODE_ENV": "production",
+    "JWT_SECRET": "your-jwt-secret-key-here-change-this"
+  }
 }
